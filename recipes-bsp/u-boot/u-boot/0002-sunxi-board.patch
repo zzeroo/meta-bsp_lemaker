@@ -1,0 +1,11 @@
+diff --git a/board/sunxi/board.c b/board/sunxi/board.c
+index 70e01437c4..3279fdf062 100644
+--- a/board/sunxi/board.c
++++ b/board/sunxi/board.c
+@@ -787,3 +787,6 @@ int board_fit_config_name_match(const char *name)
+        }
+ }
+ #endif
++
++// Disable uboot console
++int overwrite_console(void) { return 1; }
