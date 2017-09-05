@@ -27,10 +27,10 @@ inherit linux-bananapro-base
 IMAGE_TYPEDEP_bpro-sdimg = "${SDIMG_ROOTFS_TYPE}"
 
 # Set kernel and boot loader
-# IMAGE_BOOTLOADER ?= ""
+IMAGE_BOOTLOADER ?= ""
 
 # Set initramfs extension
-# KERNEL_INITRAMFS ?= ""
+KERNEL_INITRAMFS ?= ""
 
 # Kernel image name
 SDIMG_KERNELIMAGE_bananapro  ?= "kernel.img"
@@ -49,7 +49,7 @@ IMAGE_ROOTFS_ALIGNMENT = "4096"
 SDIMG_ROOTFS_TYPE ?= "ext3"
 SDIMG_ROOTFS = "${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.${SDIMG_ROOTFS_TYPE}"
 
-do_image_rpi_sdimg[depends] = " \
+do_image_bpro_sdimg[depends] = " \
 			parted-native:do_populate_sysroot \
 			mtools-native:do_populate_sysroot \
 			dosfstools-native:do_populate_sysroot \
@@ -69,7 +69,7 @@ SDIMG = "${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.bpro-sdimg"
 # SDIMG_COMPRESSION ?= ""
 
 # Additional files and/or directories to be copied into the vfat partition from the IMAGE_ROOTFS.
-# FATPAYLOAD ?= ""
+FATPAYLOAD ?= ""
 
 # SD card vfat partition image name
 SDIMG_VFAT = "${IMAGE_NAME}.vfat"
@@ -103,6 +103,65 @@ IMAGE_CMD_bpro-sdimg () {
 	BOOT_BLOCKS=$(LC_ALL=C parted -s ${SDIMG} unit b print | awk '/ 1 / { print substr($4, 1, length($4 -1)) / 512 /2 }')
 	rm -f ${WORKDIR}/boot.img
 	mkfs.vfat -n "${BOOTDD_VOLUME_ID}" -S 512 -C ${WORKDIR}/boot.img $BOOT_BLOCKS
+
+	case "${KERNEL_IMAGETYPE}" in
+	"zImage")
+		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/u-boot.bin ::${SDIMG_KERNELIMAGE}
+		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}${KERNEL_INITRAMFS}-${MACHINE}.bin ::zImage
+		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/boot.scr ::boot.scr
+		;;
+	*)
+		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}${KERNEL_INITRAMFS}-${MACHINE}.bin ::${SDIMG_KERNELIMAGE}
+		;;
+	esac
+
+	if [ -n ${FATPAYLOAD} ] ; then
+		echo "Copying payload into VFAT"
+		for entry in ${FATPAYLOAD} ; do
+				# add the || true to stop aborting on vfat issues like not supporting .~lock files
+				mcopy -i ${WORKDIR}/boot.img -s -v ${IMAGE_ROOTFS}$entry :: || true
+		done
+	fi
+
+	# Add stamp file
+	echo "${IMAGE_NAME}" > ${WORKDIR}/image-version-info
+	mcopy -i ${WORKDIR}/boot.img -v ${WORKDIR}/image-version-info ::
+
+        # Deploy vfat partition (for u-boot case only)
+        case "${KERNEL_IMAGETYPE}" in
+        "zImage")
+                cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
+                ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
+                ;;
+        *)
+                ;;
+        esac
+
+	# Burn Partitions
+	dd if=${WORKDIR}/boot.img of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
+	# If SDIMG_ROOTFS_TYPE is a .xz file use xzcat
+	if echo "${SDIMG_ROOTFS_TYPE}" | egrep -q "*\.xz"
+	then
+		xzcat ${SDIMG_ROOTFS} | dd of=${SDIMG} conv=notrunc seek=1 bs=$(expr 1024 \* ${BOOT_SPACE_ALIGNED} + ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
+	else
+		dd if=${SDIMG_ROOTFS} of=${SDIMG} conv=notrunc seek=1 bs=$(expr 1024 \* ${BOOT_SPACE_ALIGNED} + ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
+	fi
+
+	# Optionally apply compression
+	case "${SDIMG_COMPRESSION}" in
+	"gzip")
+		gzip -k9 "${SDIMG}"
+		;;
+	"bzip2")
+		bzip2 -k9 "${SDIMG}"
+		;;
+	"xz")
+		xz -k "${SDIMG}"
+		;;
+	esac
+}
+
+FOO () {
 	if test -n "${DTS}"; then
 		# Device Tree Overlays are assumed to be suffixed by '-overlay.dtb' (4.1.x) or by '.dtbo' (4.4.9+) string and will be put in a dedicated folder
 		DT_OVERLAYS="${@split_overlays(d, 0)}"
