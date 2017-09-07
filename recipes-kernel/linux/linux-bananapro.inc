@@ -35,9 +35,9 @@ python __anonymous () {
     d.setVar("KERNEL_DEVICETREE", kerneldt)
 }
 
-do_install_prepend() {
-    # install -d ${D}/lib/firmware
-}
-
-do_deploy_append() {
-}
+# do_install_prepend() {
+#     # install -d ${D}/lib/firmware
+# }
+#
+# do_deploy_append() {
+# }

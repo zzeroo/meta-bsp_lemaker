@@ -84,8 +84,9 @@ IMAGE_CMD_bpro-sdimg () {
 
 	echo "Creating filesystem with Boot partition ${BOOT_SPACE_ALIGNED} KiB and RootFS $ROOTFS_SIZE KiB"
 
-	# Check if we are building with device tree support
-	DTS="${@get_dts(d)}"
+	# # Check if we are building with device tree support
+	# DTS="${@get_dts(d)}"
+	# echo ">>>DTS ${DTS}"
 
 	# Initialize sdcard image file
 	dd if=/dev/zero of=${SDIMG} bs=1024 count=0 seek=${SDIMG_SIZE}
@@ -103,27 +104,7 @@ IMAGE_CMD_bpro-sdimg () {
 	BOOT_BLOCKS=$(LC_ALL=C parted -s ${SDIMG} unit b print | awk '/ 1 / { print substr($4, 1, length($4 -1)) / 512 /2 }')
 	rm -f ${WORKDIR}/boot.img
 	mkfs.vfat -n "${BOOTDD_VOLUME_ID}" -S 512 -C ${WORKDIR}/boot.img $BOOT_BLOCKS
-	if test -n "${DTS}"; then
-		# Device Tree Overlays are assumed to be suffixed by '-overlay.dtb' (4.1.x) or by '.dtbo' (4.4.9+) string and will be put in a dedicated folder
-		DT_OVERLAYS="${@split_overlays(d, 0)}"
-		DT_ROOT="${@split_overlays(d, 1)}"
 
-		# Copy board device trees to root folder
-		for DTB in $DT_ROOT; do
-			DTB_BASE_NAME=`basename ${DTB} .dtb`
-
-			mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}-${DTB_BASE_NAME}.dtb ::${DTB_BASE_NAME}.dtb
-		done
-
-		# Copy device tree overlays to dedicated folder
-		mmd -i ${WORKDIR}/boot.img overlays
-		for DTB in $DT_OVERLAYS; do
-				DTB_EXT=${DTB##*.}
-				DTB_BASE_NAME=`basename ${DTB} ."${DTB_EXT}"`
-
-			mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}-${DTB_BASE_NAME}.${DTB_EXT} ::overlays/${DTB_BASE_NAME}.${DTB_EXT}
-		done
-	fi
 	case "${KERNEL_IMAGETYPE}" in
 	"zImage")
 		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/u-boot.bin ::${SDIMG_KERNELIMAGE}
@@ -147,15 +128,15 @@ IMAGE_CMD_bpro-sdimg () {
 	echo "${IMAGE_NAME}" > ${WORKDIR}/image-version-info
 	mcopy -i ${WORKDIR}/boot.img -v ${WORKDIR}/image-version-info ::
 
-        # Deploy vfat partition (for u-boot case only)
-        case "${KERNEL_IMAGETYPE}" in
-        "zImage")
-                cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
-                ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
-                ;;
-        *)
-                ;;
-        esac
+    # Deploy vfat partition (for u-boot case only)
+    case "${KERNEL_IMAGETYPE}" in
+    "zImage")
+            cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
+            ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
+            ;;
+    *)
+            ;;
+    esac
 
 	# Burn Partitions
 	dd if=${WORKDIR}/boot.img of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
@@ -179,18 +160,4 @@ IMAGE_CMD_bpro-sdimg () {
 		xz -k "${SDIMG}"
 		;;
 	esac
-}
-
-ROOTFS_POSTPROCESS_COMMAND += " bpro_generate_sysctl_config ; "
-
-bpro_generate_sysctl_config() {
-	# systemd sysctl config
-	test -d ${IMAGE_ROOTFS}${sysconfdir}/sysctl.d && \
-		echo "vm.min_free_kbytes = 8192" > ${IMAGE_ROOTFS}${sysconfdir}/sysctl.d/bpro-vm.conf
-
-	# sysv sysctl config
-	IMAGE_SYSCTL_CONF="${IMAGE_ROOTFS}${sysconfdir}/sysctl.conf"
-	test -e ${IMAGE_ROOTFS}${sysconfdir}/sysctl.conf && \
-		sed -e "/vm.min_free_kbytes/d" -i ${IMAGE_SYSCTL_CONF}
-	echo "" >> ${IMAGE_SYSCTL_CONF} && echo "vm.min_free_kbytes = 8192" >> ${IMAGE_SYSCTL_CONF}
 }
