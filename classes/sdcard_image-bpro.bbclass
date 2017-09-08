@@ -1,6 +1,13 @@
 inherit image_types
 inherit linux-bananapro-base
 
+DEPENDS += " \
+	dosfstools-native \
+	mtools-native \
+	parted-native \
+	util-linux \
+"
+
 #
 # Create an image that can by written onto a SD card using dd.
 #
@@ -24,7 +31,7 @@ inherit linux-bananapro-base
 # 0                      4MiB     4MiB + 40MiB       4MiB + 40Mib + SDIMG_ROOTFS
 
 # This image depends on the rootfs image
-IMAGE_TYPEDEP_bpro-sdimg = "${SDIMG_ROOTFS_TYPE}"
+IMAGE_TYPEDEP_sdcard = "${SDIMG_ROOTFS_TYPE}"
 
 # Set kernel and boot loader
 IMAGE_BOOTLOADER ?= ""
@@ -59,10 +66,10 @@ do_image_bpro_sdimg[depends] = " \
 			"
 
 # SD card image name
-SDIMG = "${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.bpro-sdimg"
+SDIMG = "${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.sdcard"
 
 # Compression method to apply to SDIMG after it has been created. Supported
-# compression formats are "gzip", "bzip2" or "xz". The original .bpro-sdimg file
+# compression formats are "gzip", "bzip2" or "xz". The original .sdcard file
 # is kept and a new compressed file is created if one of these compression
 # formats is chosen. If SDIMG_COMPRESSION is set to any other value it is
 # silently ignored.
@@ -75,7 +82,7 @@ FATPAYLOAD ?= ""
 SDIMG_VFAT = "${IMAGE_NAME}.vfat"
 SDIMG_LINK_VFAT = "${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.vfat"
 
-IMAGE_CMD_bpro-sdimg () {
+IMAGE_CMD_sdcard () {
 
 	# Align partitions
 	BOOT_SPACE_ALIGNED=$(expr ${BOOT_SPACE} + ${IMAGE_ROOTFS_ALIGNMENT} - 1)
@@ -124,15 +131,15 @@ IMAGE_CMD_bpro-sdimg () {
 	echo "${IMAGE_NAME}" > ${WORKDIR}/image-version-info
 	mcopy -i ${WORKDIR}/boot.img -v ${WORKDIR}/image-version-info ::
 
-    # Deploy vfat partition (for u-boot case only)
-    case "${KERNEL_IMAGETYPE}" in
-    "zImage")
-            cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
-            ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
-            ;;
-    *)
-            ;;
-    esac
+        # Deploy vfat partition (for u-boot case only)
+        case "${KERNEL_IMAGETYPE}" in
+        "zImage")
+                cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
+                ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
+                ;;
+        *)
+                ;;
+        esac
 
 	# Burn Partitions
 	dd if=${WORKDIR}/boot.img of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
