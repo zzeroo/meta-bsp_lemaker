@@ -84,10 +84,6 @@ IMAGE_CMD_bpro-sdimg () {
 
 	echo "Creating filesystem with Boot partition ${BOOT_SPACE_ALIGNED} KiB and RootFS $ROOTFS_SIZE KiB"
 
-	# # Check if we are building with device tree support
-	# DTS="${@get_dts(d)}"
-	# echo ">>>DTS ${DTS}"
-
 	# Initialize sdcard image file
 	dd if=/dev/zero of=${SDIMG} bs=1024 count=0 seek=${SDIMG_SIZE}
 
