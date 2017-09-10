@@ -1,0 +1,5 @@
+
+
+DEPENDS += "swig swig-native"
+
+
