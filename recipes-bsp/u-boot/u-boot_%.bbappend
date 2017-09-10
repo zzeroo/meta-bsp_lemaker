@@ -8,3 +8,4 @@ SRC_URI_append = " \
 RDEPENDS_${PN}_append_bpro = " bpro-u-boot-scr"
 
 DEPENDS += "dtc"
+DEPENDS += "dtc-native swig-native"
