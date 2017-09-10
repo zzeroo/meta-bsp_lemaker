@@ -163,4 +163,7 @@ IMAGE_CMD_sdcard () {
 		xz -k "${SDIMG}"
 		;;
 	esac
+
+	# Write SPL
+	dd if=${DEPLOY_DIR_IMAGE}/u-boot-sunxi-with-spl.bin of=${SDIMG} bs=1024 seek=8 conv=notrunc
 }
