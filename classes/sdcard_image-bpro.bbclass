@@ -131,15 +131,19 @@ IMAGE_CMD_sdcard () {
 	echo "${IMAGE_NAME}" > ${WORKDIR}/image-version-info
 	mcopy -i ${WORKDIR}/boot.img -v ${WORKDIR}/image-version-info ::
 
-        # Deploy vfat partition (for u-boot case only)
-        case "${KERNEL_IMAGETYPE}" in
-        "zImage")
-                cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
-                ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
-                ;;
-        *)
-                ;;
-        esac
+  # Deploy vfat partition (for u-boot case only)
+  case "${KERNEL_IMAGETYPE}" in
+  "zImage")
+          cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
+          ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
+          ;;
+  *)
+          ;;
+  esac
+
+  # DeviceTree
+  DTB_BASE_NAME="sun7i-a20-bananapro"
+  mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}-${DTB_BASE_NAME}.dtb ::${DTB_BASE_NAME}.dtb
 
 	# Burn Partitions
 	dd if=${WORKDIR}/boot.img of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
