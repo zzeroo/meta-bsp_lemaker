@@ -7,6 +7,7 @@ DEPENDS += " \
 	mtools-native \
 	parted-native \
 	util-linux \
+	btrfs-tools \
 "
 
 #
