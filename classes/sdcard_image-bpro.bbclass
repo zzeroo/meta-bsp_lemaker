@@ -7,7 +7,6 @@ DEPENDS += " \
 	mtools-native \
 	parted-native \
 	util-linux \
-	btrfs-tools \
 "
 
 #
@@ -53,9 +52,8 @@ BOOT_SPACE ?= "40960"
 # Set alignment to 4MB [in KiB]
 IMAGE_ROOTFS_ALIGNMENT = "4096"
 
-# Use an uncompressed ext3 by default as rootfs
-# TODO: Check `btrfs`
-SDIMG_ROOTFS_TYPE ?= "btrfs"
+# Use an uncompressed ext4 by default as rootfs
+SDIMG_ROOTFS_TYPE ?= "ext4"
 SDIMG_ROOTFS = "${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.${SDIMG_ROOTFS_TYPE}"
 
 do_image_bpro_sdimg[depends] = " \
@@ -102,7 +100,7 @@ IMAGE_CMD_sdcard () {
 	parted -s ${SDIMG} unit KiB mkpart primary fat32 ${IMAGE_ROOTFS_ALIGNMENT} $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT})
 	parted -s ${SDIMG} set 1 boot on
 	# Create rootfs partition to the end of disk
-	parted -s ${SDIMG} -- unit KiB mkpart primary btrfs $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT}) -1s
+	parted -s ${SDIMG} -- unit KiB mkpart primary ext4 $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT}) -1s
 	parted ${SDIMG} print
 
 	# Create a vfat image with boot files

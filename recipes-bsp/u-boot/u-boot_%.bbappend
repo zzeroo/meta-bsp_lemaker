@@ -8,4 +8,3 @@ SRC_URI_append = " \
     "
 
 RDEPENDS_${PN}_append_bananapro = " bpro-u-boot-scr"
-
