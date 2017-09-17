@@ -2,6 +2,7 @@ inherit image_types
 inherit linux-bananapro-base
 
 DEPENDS += " \
+	u-boot \
 	dosfstools-native \
 	mtools-native \
 	parted-native \
@@ -51,9 +52,8 @@ BOOT_SPACE ?= "40960"
 # Set alignment to 4MB [in KiB]
 IMAGE_ROOTFS_ALIGNMENT = "4096"
 
-# Use an uncompressed ext3 by default as rootfs
-# TODO: Check `btrfs`
-SDIMG_ROOTFS_TYPE ?= "ext3"
+# Use an uncompressed ext4 by default as rootfs
+SDIMG_ROOTFS_TYPE ?= "ext4"
 SDIMG_ROOTFS = "${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.${SDIMG_ROOTFS_TYPE}"
 
 do_image_bpro_sdimg[depends] = " \
@@ -100,7 +100,7 @@ IMAGE_CMD_sdcard () {
 	parted -s ${SDIMG} unit KiB mkpart primary fat32 ${IMAGE_ROOTFS_ALIGNMENT} $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT})
 	parted -s ${SDIMG} set 1 boot on
 	# Create rootfs partition to the end of disk
-	parted -s ${SDIMG} -- unit KiB mkpart primary ext2 $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT}) -1s
+	parted -s ${SDIMG} -- unit KiB mkpart primary ext4 $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT}) -1s
 	parted ${SDIMG} print
 
 	# Create a vfat image with boot files
@@ -113,6 +113,7 @@ IMAGE_CMD_sdcard () {
 		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/u-boot.bin ::${SDIMG_KERNELIMAGE}
 		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}${KERNEL_INITRAMFS}-${MACHINE}.bin ::zImage
 		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/boot.scr ::boot.scr
+		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/boot.cmd ::boot.cmd
 		;;
 	*)
 		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}${KERNEL_INITRAMFS}-${MACHINE}.bin ::${SDIMG_KERNELIMAGE}
@@ -131,15 +132,19 @@ IMAGE_CMD_sdcard () {
 	echo "${IMAGE_NAME}" > ${WORKDIR}/image-version-info
 	mcopy -i ${WORKDIR}/boot.img -v ${WORKDIR}/image-version-info ::
 
-        # Deploy vfat partition (for u-boot case only)
-        case "${KERNEL_IMAGETYPE}" in
-        "zImage")
-                cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
-                ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
-                ;;
-        *)
-                ;;
-        esac
+  # Deploy vfat partition (for u-boot case only)
+  case "${KERNEL_IMAGETYPE}" in
+  "zImage")
+          cp ${WORKDIR}/boot.img ${IMGDEPLOYDIR}/${SDIMG_VFAT}
+          ln -sf ${SDIMG_VFAT} ${SDIMG_LINK_VFAT}
+          ;;
+  *)
+          ;;
+  esac
+
+  # DeviceTree
+  DTB_BASE_NAME="sun7i-a20-bananapro"
+  mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}-${DTB_BASE_NAME}.dtb ::${DTB_BASE_NAME}.dtb
 
 	# Burn Partitions
 	dd if=${WORKDIR}/boot.img of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024) && sync && sync
@@ -163,4 +168,7 @@ IMAGE_CMD_sdcard () {
 		xz -k "${SDIMG}"
 		;;
 	esac
+
+	# Write SPL
+	dd if=${DEPLOY_DIR_IMAGE}/u-boot-sunxi-with-spl.bin of=${SDIMG} bs=1024 seek=8 conv=notrunc
 }

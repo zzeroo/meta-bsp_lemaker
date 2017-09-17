@@ -16,6 +16,8 @@ inherit deploy
 do_deploy() {
     install -d ${DEPLOYDIR}
     install -m 0644 boot.scr ${DEPLOYDIR}
+    install -m 0644 boot.scr ${DEPLOYDIR}
+    install -m 0644 "${WORKDIR}/boot.cmd" ${DEPLOYDIR}
 }
 
 addtask do_deploy after do_compile before do_build

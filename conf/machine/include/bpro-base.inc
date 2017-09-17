@@ -2,11 +2,11 @@ include conf/machine/include/bpro-default-settings.inc
 include conf/machine/include/bpro-default-versions.inc
 include conf/machine/include/bpro-default-providers.inc
 
-IMAGE_FSTYPES ?= "tar.bz2 ext3 sdcard"
+IMAGE_FSTYPES ?= "tar.bz2 sdcard"
 
 KERNEL_IMAGETYPE ?= "zImage"
 
-MACHINE_FEATURES += "vfat ext3 wifi"
+MACHINE_FEATURES += "vfat wifi"
 
 MACHINE_EXTRA_RRECOMMENDS += " kernel-modules"
 
@@ -23,9 +23,5 @@ RDEPENDS_kernel-base = ""
 SERIAL_CONSOLE ?= "115200 ttyS0"
 
 SPL_BINARY="u-boot-sunxi-with-spl.bin"
-# UBOOT_ENTRYPOINT = "0x40008000"
-# UBOOT_LOADADDRESS = "0x40008000"
-# UBOOT_ENV ?= ""
-# UBOOT_ENV_SUFFIX ?= "scr"
 UBOOT_MACHINE = "Bananapro_defconfig"
-# #UBOOT_CONFIG = "Bananapro_defconfig"
+KERNEL_DEVICETREE = "sun7i-a20-bananapro.dtb"
