@@ -1,3 +1,6 @@
+inherit kernel
+require recipes-kernel/linux/linux-yocto.inc
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-${PV}:"
 
 LINUX_VERSION ?= "4.6"
@@ -9,5 +12,3 @@ SRC_URI += "file://defconfig"
 SRC_URI += "file://0001-lcd.patch"
 SRC_URI += "file://0002-led.patch"
 SRC_URI += "file://0003-uart2.patch"
-
-require linux-bananapro.inc

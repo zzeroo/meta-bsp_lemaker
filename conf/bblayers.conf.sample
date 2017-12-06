@@ -1,17 +1,21 @@
 # LAYER_CONF_VERSION is increased each time build/conf/bblayers.conf
 # changes incompatibly
-LCONF_VERSION = "6"
+POKY_BBLAYERS_CONF_VERSION = "2"
 
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
 
 BBLAYERS ?= " \
   /home/build/shared/poky/meta \
-  /home/build/shared/poky/meta-yocto \
+  /home/build/shared/poky/meta-poky \
   /home/build/shared/poky/meta-yocto-bsp \
-  /home/build/shared/poky/meta-bsp_lemaker \
+  /home/build/shared/meta-clang \
+  /home/build/shared/meta-bsp_lemaker \
+  /home/build/shared/meta-xmz-mod-touch \
+  /home/build/shared/meta-openembedded/meta-oe \
+  /home/build/shared/meta-rust \
   "
 BBLAYERS_NON_REMOVABLE ?= " \
   /home/build/shared/poky/meta \
-  /home/build/shared/poky/meta-yocto \
+  /home/build/shared/poky/meta-poky \
   "

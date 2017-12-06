@@ -1,16 +1,8 @@
 diff --git a/arch/arm/boot/dts/sun7i-a20-bananapro.dts b/arch/arm/boot/dts/sun7i-a20-bananapro.dts
-index e7af1b7..8e5c48e 100644
+index e7af1b7..d7eac60 100644
 --- a/arch/arm/boot/dts/sun7i-a20-bananapro.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-bananapro.dts
-@@ -45,6 +45,7 @@
- #include "sunxi-common-regulators.dtsi"
- #include <dt-bindings/gpio/gpio.h>
- #include <dt-bindings/interrupt-controller/arm-gic.h>
-+#include <dt-bindings/pinctrl/sun4i-a10.h>
- 
- / {
- 	model = "LeMaker Banana Pro";
-@@ -147,6 +148,25 @@
+@@ -147,6 +147,25 @@
  	status = "okay";
  };
  
@@ -23,9 +15,8 @@ index e7af1b7..8e5c48e 100644
 +		reg = <0x38>;
 +		interrupt-parent = <&pio>;
 +		interrupts = <7 9 IRQ_TYPE_EDGE_FALLING>;
-+		wake-gpios = <&pio 7 7 GPIO_ACTIVE_LOW>;
++		wake-gpios = <7 7 GPIO_ACTIVE_LOW>;
 +		pinctrl-names = "default";
-+		pinctrl-0 = <&edt_ft5x06_pins>;
 +		touchscreen-size-x = <1024>;
 +		touchscreen-size-y = <600>;
 +		touchscreen-inverted-x;
@@ -33,19 +24,18 @@ index e7af1b7..8e5c48e 100644
 +	};
 +};
 +
++
  &ir0 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&ir0_rx_pins_a>;
-@@ -220,6 +240,13 @@
+@@ -220,6 +239,11 @@
  		pins = "PH22";
  		function = "gpio_out";
  	};
 +
-+  edt_ft5x06_pins: edt_ft5x06_pins@0 {
-+		allwinner,pins = "PH7", "PH9";
-+		allwinner,function = "gpio_out";
-+		allwinner,drive = <SUN4I_PINCTRL_40_MA>;
-+		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
++	edt_ft5x06_pins: edt_ft5x06_pins@0 {
++		pins = "PH7", "PH9";
++		function = "gpio_out";
 +	};
  };
  
