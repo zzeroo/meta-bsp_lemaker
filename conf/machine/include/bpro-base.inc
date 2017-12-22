@@ -16,6 +16,11 @@ IMAGE_BOOT_FILES ?= " \
                  ${@bb.utils.contains('KERNEL_IMAGETYPE', 'zImage', 'boot.scr;boot.scr', '', d)} \
                  "
 
+
+# https://community.nxp.com/docs/DOC-105521
+IMAGE_ROOTFS_EXTRA_SPACE = "100000"
+IMAGE_OVERHEAD_FACTOR = "1.5"
+
 # The kernel image is installed into the FAT32 boot partition and does not need
 # to also be installed into the rootfs.
 RDEPENDS_kernel-base = ""
