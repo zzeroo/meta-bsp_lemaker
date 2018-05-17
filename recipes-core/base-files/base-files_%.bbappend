@@ -1,1 +1,1 @@
-hostname = "xmz-mod-touch_${MACHINE}"
+hostname = "xmz-v2-${MACHINE}"
