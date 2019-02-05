@@ -1,1 +1,1 @@
-ACTION=="add|change", KERNEL=="event2", ENV{ID_SEAT}="seat1"
+ACTION=="add|change", KERNEL=="event2", ENV{ID_SEAT}="seat2"
