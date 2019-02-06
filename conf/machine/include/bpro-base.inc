@@ -23,7 +23,7 @@ IMAGE_OVERHEAD_FACTOR = "1.5"
 
 # The kernel image is installed into the FAT32 boot partition and does not need
 # to also be installed into the rootfs.
-RDEPENDS_kernel-base = ""
+RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
 
 SERIAL_CONSOLE ?= "115200 ttyS0"
 
